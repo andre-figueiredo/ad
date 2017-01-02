@@ -11,17 +11,17 @@ from random import expovariate, seed
 ### General values ----------------------------------------
 seedVal = 99999		# Seed to start simulation
 # Time spended to attend a Customer (M/G/1 - fixed time)
-serviceTime = 12.0
+serviceTime = 5.0
 # Maximum simulation time
-maxTime = 400.0
+maxTime = 30.0
 
 ### Customer one ------------------------------------------
-lamb1 = 1.0		# rate of Customer one
+lamb1 = 5.0		# rate of Customer one
 NCustomer1 = 10		# Number of Customers type one
 priority1 = 100		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 10.0		# rate of Customer two
-NCustomer2 = 100	# Number of Customers type two
+lamb2 = 5.0		# rate of Customer two
+NCustomer2 = 10		# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
 ###########################################################

@@ -2,26 +2,29 @@
     no priority queue and FIFO. """
 
 from SimPy.Simulation import Simulation,Process,Resource,Monitor,PriorityQ,hold,request,release
-from random import expovariate, seed
+from random import expovariate,seed
 
 ###########################################################
 ## Experiment data
 ###########################################################
 
 ### General values ----------------------------------------
-seedVal = 99999		# Seed to start simulation
+# Seed to start simulation
+seedVal = 99998
 # Time spended to attend a Customer (M/G/1 - fixed time)
-serviceTime = 12.0
+serviceTime = 1.0
 # Maximum simulation time
-maxTime = 400.0
+maxTime = 55000.0 
+# How many time repeat simulation?
+numberOfSim = 1
 
 ### Customer one ------------------------------------------
-lamb1 = 1.0		# rate of Customer one
-NCustomer1 = 10		# Number of Customers type one
+lamb1 = 20.0		# rate of Customer one
+NCustomer1 = 1		# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 10.0		# rate of Customer two
-NCustomer2 = 100	# Number of Customers type two
+lamb2 = 30.0		# rate of Customer two
+NCustomer2 = 1		# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
 ###########################################################
@@ -61,21 +64,35 @@ class BankModel(Simulation):
 	def run(self,aseed):
 		self.initialize()
 		seed(aseed)
-		self.counter = Resource(name="Counter", unitName="John Doe", monitored=True, qType=PriorityQ, sim=self)
+		self.counter = Resource(name="Counter", unitName="John Doe", monitored=True, monitorType=Monitor, qType=PriorityQ, sim=self,capacity=1)
 		s1 = Source('Source1', sim=self)
 		s2 = Source('Source2', sim=self)
 		self.activate(s1, s1.generate(number=NCustomer1, interval=lamb1, typeOfClient=1 ,priority=priority1))
 		self.activate(s2, s2.generate(number=NCustomer2, interval=lamb2, typeOfClient=2, priority=priority2))
 		self.simulate(until=maxTime)
 
-		return
+		avgwait = self.counter.waitMon.mean()
+		avgqueue = self.counter.waitMon.timeAverage()
+		avgutilization = self.counter.actMon.timeAverage()
+		endOfSim = self.now()
+
+		return [avgwait, avgqueue, avgutilization, endOfSim]
 
 ############################################################
 ## Experiment
 ############################################################
 
-modl = BankModel()
-modl.run(aseed=seedVal)
+# ----------------------
+bankreception = []
+for i in range(numberOfSim):
+    mg1 = BankModel()
+    mg1.startCollection(when=maxTime,monitors=mg1.allMonitors)
+    result = mg1.run(seedVal + i)
+    bankreception.append(result)
 
-nrwaiting = modl.counter.waitMon.timeAverage()
-print ("----------\nAverage waiting = %6.4f\n"%(nrwaiting))
+print("\n\n")
+print("-"*50)
+print("Average wait | Average queue | Average of Utilization | End Of Simulation at")
+for i in range(len(bankreception)):
+    print(bankreception[i])
+
