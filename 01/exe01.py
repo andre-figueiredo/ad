@@ -21,11 +21,11 @@ numberOfSim = 1
 
 ### Customer one ------------------------------------------
 lamb1 = 0.5		# rate of Customer one
-NCustomer1 = 2		# Number of Customers type one
+NCustomer1 = 50000		# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
 lamb2 = 0.3		# rate of Customer two
-NCustomer2 = 2		# Number of Customers type two
+NCustomer2 = 50000		# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
@@ -102,8 +102,8 @@ for i in range(numberOfSim):
     mg1.startCollection(when=maxTime, monitors=mg1.allMonitors)
     result = mg1.run(seedVal + i)
     bankreception.append(result)
-print("customerName | Arrival Time | Time in queue | Time been served | Total time | end time")
-print(customersData)
+#print("customerName | Arrival Time | Time in queue | Time been served | Total time | end time")
+#print(customersData)
 #print("\n")
 #print("-" * 50)
 #print("Average wait | Average queue | Average of Utilization | End Of Simulation at")
@@ -111,18 +111,33 @@ print(customersData)
 #    print(bankreception[i])
 
 ############################################################
-## Prints
-###########################################################
-"""totalAttendedCustomers = len(customersData)
+## Results
+############################################################
+serviceTimeSum = 0.0
+totalTimeCustomer = 0.0
+totalAttendedCustomers = float(len(customersData))
 endOfSimulation = bankreception[0][3]
-mi = 1.0/serviceTime 
-rho = (lamb1+lamb2)/mi
-expResidualTime = (serviceTime*serviceTime)/(2*serviceTime)
+for i in range(len(customersData)):
+    serviceTimeSum = serviceTimeSum + customersData[i][3]
+    totalTimeCustomer = totalTimeCustomer + customersData[i][2]
+
+serviceTimeAverage = serviceTimeSum / totalAttendedCustomers
+avgTotalTimeCustomer = totalTimeCustomer / totalAttendedCustomers
+
+mi = 1.0/serviceTimeAverage
+if mi > lamb1+lamb2:
+    rho = (lamb1+lamb2)/mi
+else:
+    rho = 1.0 
+expResidualTime = (serviceTimeAverage*serviceTimeAverage)/(2*serviceTimeAverage)
 expU = (rho*expResidualTime)/(1.0 - rho)
+############################################################
+## Prints
+############################################################
 print("\nTotal clients attended: %0.8f"%(totalAttendedCustomers))
 print("End Of Simulation at: %0.8f\n"%(endOfSimulation))
 print("Mi = %0.8f"%(mi))
 print("Rho = %0.8f"%(rho))
-print("E[Xr] = %0.8f\n"%(expResidualTime))
+print("E[Xr] = %0.8f"%(expResidualTime))
 print("E[U] = %0.8f\n"%(expU))
-"""
+print("E[U] = %0.8f\n"%(avgTotalTimeCustomer))
