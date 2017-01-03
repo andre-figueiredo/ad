@@ -36,8 +36,6 @@ lamb2 = 30.0  # rate of Customer two
 NCustomer2 = 1  # Number of Customers type two
 priority2 = 0  # Priority number foR Customer two
 
->>>>>>> 68aa65719e623847033090473d9826c0c8aec468
-
 
 # [time, clientArrivalTime]
 arrivalTime = []
@@ -58,7 +56,6 @@ class Source(Process):
 
 
 class Customer(Process):
-<<<<<<< HEAD
 	""" Customer arrives, is served and leaves """
 	# [[customerName, arrival time, time in queue, time been served, end time]]
 	customerData = []
@@ -83,25 +80,7 @@ class Customer(Process):
 
 		self.customerData.append([customerName,arrive,wait,timeInBank,finished])
 		print(self.customerData)
-=======
-    """ Customer arrives, is served and leaves """
 
-    def visit(self, timeInBank=0, counter=0, P=0):
-        # arrival time
-        arrive = self.sim.now()
-        Nwaiting = len(self.sim.counter.waitQ)
-        print("%8.3f %s: Queue is %d on arrival" % (self.sim.now(), self.name, Nwaiting))
-
-        yield request, self, self.sim.counter, P
-        # waiting time
-        wait = self.sim.now() - arrive
-        print("%8.3f %s: Waited %6.3f" % (self.sim.now(), self.name, wait))
-        yield hold, self, timeInBank
-        yield release, self, self.sim.counter
-
-        print("%8.3f %s: Completed" % (self.sim.now(), self.name))
-
->>>>>>> 68aa65719e623847033090473d9826c0c8aec468
 
 class BankModel(Simulation):
     def run(self, aseed):
@@ -120,18 +99,8 @@ class BankModel(Simulation):
         avgutilization = self.counter.actMon.timeAverage()
         endOfSim = self.now()
 
-<<<<<<< HEAD
-		avgwait = self.counter.waitMon.timeAverage()
-		avgqueue = self.counter.waitMon.timeAverage()
-		avgutilization = self.counter.actMon.timeAverage()
-		endOfSim = self.now()
-
-		#return [avgwait, avgqueue, avgutilization, endOfSim]
-		return [avgwait]
-=======
         return [avgwait, avgqueue, avgutilization, endOfSim]
 
->>>>>>> 68aa65719e623847033090473d9826c0c8aec468
 
 ############################################################
 ## Experiment
