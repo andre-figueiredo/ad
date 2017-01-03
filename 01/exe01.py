@@ -19,7 +19,6 @@ maxTime = 55000.0
 numberOfSim = 1
 
 ### Customer one ------------------------------------------
-<<<<<<< HEAD
 lamb1 = 20.0		# rate of Customer one
 NCustomer1 = 100	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
@@ -27,18 +26,8 @@ priority1 = 0		# Priority number for Customer one
 lamb2 = 30.0		# rate of Customer two
 NCustomer2 = 100	# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
-=======
-lamb1 = 20.0  # rate of Customer one
 NCustomer1 = 1  # Number of Customers type one
-priority1 = 0  # Priority number for Customer one
-### Customer two ------------------------------------------
-lamb2 = 30.0  # rate of Customer two
-NCustomer2 = 1  # Number of Customers type two
-priority2 = 0  # Priority number foR Customer two
 
-
-# [time, clientArrivalTime]
-arrivalTime = []
 
 ###########################################################
 ## Model components
@@ -50,9 +39,9 @@ class Source(Process):
     def generate(self, number, interval, typeOfClient, priority):
         for i in range(number):
             c = Customer(name="Customer%02d_%02d" % (typeOfClient, i,), sim=self.sim)
-        self.sim.activate(c, c.visit(timeInBank=serviceTime, counter=self.sim.counter, P=priority))
-        t = expovariate(1.0 / interval)
-        yield hold, self, t
+            self.sim.activate(c, c.visit(timeInBank=serviceTime, counter=self.sim.counter, P=priority))
+            t = expovariate(1.0 / interval)
+            yield hold, self, t
 
 
 class Customer(Process):
