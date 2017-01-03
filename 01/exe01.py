@@ -20,12 +20,16 @@ numberOfSim = 1
 
 ### Customer one ------------------------------------------
 lamb1 = 20.0		# rate of Customer one
-NCustomer1 = 1		# Number of Customers type one
+NCustomer1 = 100	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
 lamb2 = 30.0		# rate of Customer two
-NCustomer2 = 1		# Number of Customers type two
+NCustomer2 = 100	# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
+
+
+# [time, clientArrivalTime]
+arrivalTime = []
 
 ###########################################################
 ## Model components
@@ -43,21 +47,29 @@ class Source(Process):
 
 class Customer(Process):
 	""" Customer arrives, is served and leaves """
+	# [[customerName, arrival time, time in queue, time been served, end time]]
+	customerData = []
         
 	def visit(self, timeInBank=0, counter=0, P=0):
+		customerName = self.name
 		# arrival time
 		arrive = self.sim.now()
 		Nwaiting = len(self.sim.counter.waitQ)
-		print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
-
+		#print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
 		yield request,self,self.sim.counter,P
+		
 		# waiting time
 		wait = self.sim.now() - arrive
-		print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
-		yield hold,self,timeInBank
-		yield release,self,self.sim.counter                             
+		#print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
 
-		print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+		yield hold,self,timeInBank
+		yield release,self,self.sim.counter
+		
+		finished = self.sim.now()
+		#print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+
+		self.customerData.append([customerName,arrive,wait,timeInBank,finished])
+		print(self.customerData)
 
 class BankModel(Simulation):
 
@@ -71,12 +83,13 @@ class BankModel(Simulation):
 		self.activate(s2, s2.generate(number=NCustomer2, interval=lamb2, typeOfClient=2, priority=priority2))
 		self.simulate(until=maxTime)
 
-		avgwait = self.counter.waitMon.mean()
+		avgwait = self.counter.waitMon.timeAverage()
 		avgqueue = self.counter.waitMon.timeAverage()
 		avgutilization = self.counter.actMon.timeAverage()
 		endOfSim = self.now()
 
-		return [avgwait, avgqueue, avgutilization, endOfSim]
+		#return [avgwait, avgqueue, avgutilization, endOfSim]
+		return [avgwait]
 
 ############################################################
 ## Experiment
