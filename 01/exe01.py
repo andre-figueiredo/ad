@@ -3,6 +3,7 @@
 
 from SimPy.Simulation import Simulation, Process, Resource, Monitor, PriorityQ, hold, request, release
 from random import expovariate, seed
+from random import randrange
 
 ###########################################################
 ## Experiment data
@@ -12,22 +13,23 @@ from random import expovariate, seed
 # Seed to start simulation
 seedVal = 99998
 # Time spended to attend a Customer (M/G/1 - fixed time)
-serviceTime = 1.0
+serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
 # Maximum simulation time
-maxTime = 55000.0
+maxTime = 10000000.0
 # How many time repeat simulation?
 numberOfSim = 1
 
 ### Customer one ------------------------------------------
-lamb1 = 20.0		# rate of Customer one
-NCustomer1 = 100	# Number of Customers type one
+lamb1 = 0.5		# rate of Customer one
+NCustomer1 = 2		# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 30.0		# rate of Customer two
-NCustomer2 = 100	# Number of Customers type two
+lamb2 = 0.3		# rate of Customer two
+NCustomer2 = 2		# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
-NCustomer1 = 1  # Number of Customers type one
 
+# [[customerName, arrival time, time in queue, time been served, total time, end time]]
+customersData = []
 
 ###########################################################
 ## Model components
@@ -39,36 +41,34 @@ class Source(Process):
     def generate(self, number, interval, typeOfClient, priority):
         for i in range(number):
             c = Customer(name="Customer%02d_%02d" % (typeOfClient, i,), sim=self.sim)
-            self.sim.activate(c, c.visit(timeInBank=serviceTime, counter=self.sim.counter, P=priority))
+            self.sim.activate(c, c.visit(timeInBank=serviceTime[randrange(0,len(serviceTime))], counter=self.sim.counter, P=priority))
             t = expovariate(1.0 / interval)
             yield hold, self, t
 
 
 class Customer(Process):
 	""" Customer arrives, is served and leaves """
-	# [[customerName, arrival time, time in queue, time been served, end time]]
-	customerData = []
         
 	def visit(self, timeInBank=0, counter=0, P=0):
 		customerName = self.name
 		# arrival time
 		arrive = self.sim.now()
 		Nwaiting = len(self.sim.counter.waitQ)
-		#print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
+		print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
 		yield request,self,self.sim.counter,P
 		
 		# waiting time
 		wait = self.sim.now() - arrive
-		#print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
+		print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
 
 		yield hold,self,timeInBank
 		yield release,self,self.sim.counter
 		
 		finished = self.sim.now()
-		#print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+		print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
 
-		self.customerData.append([customerName,arrive,wait,timeInBank,finished])
-		print(self.customerData)
+		totalTime = finished - arrive
+		customersData.append([customerName,arrive,wait,timeInBank,totalTime,finished])
 
 
 class BankModel(Simulation):
@@ -102,9 +102,27 @@ for i in range(numberOfSim):
     mg1.startCollection(when=maxTime, monitors=mg1.allMonitors)
     result = mg1.run(seedVal + i)
     bankreception.append(result)
+print("customerName | Arrival Time | Time in queue | Time been served | Total time | end time")
+print(customersData)
+#print("\n")
+#print("-" * 50)
+#print("Average wait | Average queue | Average of Utilization | End Of Simulation at")
+#for i in range(len(bankreception)):
+#    print(bankreception[i])
 
-print("\n\n")
-print("-" * 50)
-print("Average wait | Average queue | Average of Utilization | End Of Simulation at")
-for i in range(len(bankreception)):
-    print(bankreception[i])
+############################################################
+## Prints
+###########################################################
+"""totalAttendedCustomers = len(customersData)
+endOfSimulation = bankreception[0][3]
+mi = 1.0/serviceTime 
+rho = (lamb1+lamb2)/mi
+expResidualTime = (serviceTime*serviceTime)/(2*serviceTime)
+expU = (rho*expResidualTime)/(1.0 - rho)
+print("\nTotal clients attended: %0.8f"%(totalAttendedCustomers))
+print("End Of Simulation at: %0.8f\n"%(endOfSimulation))
+print("Mi = %0.8f"%(mi))
+print("Rho = %0.8f"%(rho))
+print("E[Xr] = %0.8f\n"%(expResidualTime))
+print("E[U] = %0.8f\n"%(expU))
+"""
