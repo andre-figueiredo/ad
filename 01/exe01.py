@@ -54,18 +54,18 @@ class Customer(Process):
 		# arrival time
 		arrive = self.sim.now()
 		Nwaiting = len(self.sim.counter.waitQ)
-		print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
+		# print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
 		yield request,self,self.sim.counter,P
 
 		# waiting time
 		wait = self.sim.now() - arrive
-		print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
+		# print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
 
 		yield hold,self,timeInBank
 		yield release,self,self.sim.counter
 
 		finished = self.sim.now()
-		print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+		# print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
 
 		totalTime = finished - arrive
 		customersData.append([customerName,arrive,wait,timeInBank,totalTime,finished])
@@ -114,10 +114,12 @@ for i in range(numberOfSim):
 ## Results
 ############################################################
 serviceTimeSum = 0.0
-totalTimeCustomer = 0.0
+totalTimeSystemInUse = 0.0
+totalTimeWaitCustomer = 0.0
 totalAttendedCustomers = float(len(customersData))
 endOfSimulation = bankreception[0][3]
 
+# Para facilitar saber qual a posicao no array de cada coisa
 arrive = 1
 wait = 2
 timeInBank = 3
@@ -125,25 +127,29 @@ totalTime = 4
 finished = 5
 
 for i in range(len(customersData)):
-    serviceTimeSum = serviceTimeSum + customersData[i][timeInBank]
-    totalTimeCustomer = totalTimeCustomer + customersData[i][wait]
+    serviceTimeSum += customersData[i][timeInBank]
+    totalTimeWaitCustomer += customersData[i][wait]
+    totalTimeSystemInUse += customersData[i][totalTime]
 
 serviceTimeAverage = serviceTimeSum / totalAttendedCustomers
-avgTotalTimeCustomer = totalTimeCustomer / totalAttendedCustomers
+pendingService = totalTimeWaitCustomer / totalAttendedCustomers
 
-# Calculando a variancia para poder usar como segundo momento
-# e assim conseguir calcular o x residual
+# Calculando a variancia para poder usar como segundo momento vulgo E[X^2]
+# e assim conseguir calcular o x residual = E[X^2] / (2 * E[X])
 total = 0
 for i in range(len(customersData)):
-    total += ((customersData[i][wait] - avgTotalTimeCustomer) ** 2)
+    total += ((customersData[i][timeInBank] - serviceTimeAverage) ** 2)
 
-variancia = total / (len(customersData) - 1)
+variancia = total / (totalAttendedCustomers - 1)
 
 mi = 1.0 / serviceTimeAverage
-if mi > lamb1 + lamb2:
-    rho = (lamb1 + lamb2) / mi
-else:
-    rho = 1.0
+
+# Rho eh o percentual de uso do sistema. Logo estou calculando atraves dos dados.
+rho = serviceTimeSum / totalTimeSystemInUse
+# if mi > lamb1 + lamb2:
+#     rho = (lamb1 + lamb2) / mi
+# else:
+#     rho = 1.0
 
 expResidualTime = variancia / (2 * serviceTimeAverage)
 
@@ -159,5 +165,5 @@ print("E[X] = %0.8f" % (serviceTimeAverage))
 print("Mi = %0.8f" % (mi))
 print("Rho = %0.8f" % (rho))
 print("E[Xr] = %0.8f" % (expResidualTime))
-print("E[U] = %0.8f\n" % (expU))
-print("E[U] = %0.8f\n" % (avgTotalTimeCustomer))
+print("E[U] calculado= %0.8f" % (expU))
+print("E[U] contado = %0.8f" % (pendingService))
