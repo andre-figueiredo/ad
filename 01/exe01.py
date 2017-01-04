@@ -48,7 +48,7 @@ class Source(Process):
 
 class Customer(Process):
 	""" Customer arrives, is served and leaves """
-        
+
 	def visit(self, timeInBank=0, counter=0, P=0):
 		customerName = self.name
 		# arrival time
@@ -56,14 +56,14 @@ class Customer(Process):
 		Nwaiting = len(self.sim.counter.waitQ)
 		print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
 		yield request,self,self.sim.counter,P
-		
+
 		# waiting time
 		wait = self.sim.now() - arrive
 		print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
 
 		yield hold,self,timeInBank
 		yield release,self,self.sim.counter
-		
+
 		finished = self.sim.now()
 		print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
 
@@ -117,27 +117,47 @@ serviceTimeSum = 0.0
 totalTimeCustomer = 0.0
 totalAttendedCustomers = float(len(customersData))
 endOfSimulation = bankreception[0][3]
+
+arrive = 1
+wait = 2
+timeInBank = 3
+totalTime = 4
+finished = 5
+
 for i in range(len(customersData)):
-    serviceTimeSum = serviceTimeSum + customersData[i][3]
-    totalTimeCustomer = totalTimeCustomer + customersData[i][2]
+    serviceTimeSum = serviceTimeSum + customersData[i][timeInBank]
+    totalTimeCustomer = totalTimeCustomer + customersData[i][wait]
 
 serviceTimeAverage = serviceTimeSum / totalAttendedCustomers
 avgTotalTimeCustomer = totalTimeCustomer / totalAttendedCustomers
 
-mi = 1.0/serviceTimeAverage
-if mi > lamb1+lamb2:
-    rho = (lamb1+lamb2)/mi
+# Calculando a variancia para poder usar como segundo momento
+# e assim conseguir calcular o x residual
+total = 0
+for i in range(len(customersData)):
+    total += ((customersData[i][wait] - avgTotalTimeCustomer) ** 2)
+
+variancia = total / (len(customersData) - 1)
+
+mi = 1.0 / serviceTimeAverage
+if mi > lamb1 + lamb2:
+    rho = (lamb1 + lamb2) / mi
 else:
-    rho = 1.0 
-expResidualTime = (serviceTimeAverage*serviceTimeAverage)/(2*serviceTimeAverage)
-expU = (rho*expResidualTime)/(1.0 - rho)
+    rho = 1.0
+
+expResidualTime = variancia / (2 * serviceTimeAverage)
+
+expU = (rho * expResidualTime) / (1.0 - rho)
 ############################################################
 ## Prints
 ############################################################
-print("\nTotal clients attended: %0.8f"%(totalAttendedCustomers))
-print("End Of Simulation at: %0.8f\n"%(endOfSimulation))
-print("Mi = %0.8f"%(mi))
-print("Rho = %0.8f"%(rho))
-print("E[Xr] = %0.8f"%(expResidualTime))
-print("E[U] = %0.8f\n"%(expU))
-print("E[U] = %0.8f\n"%(avgTotalTimeCustomer))
+print("\nTotal clients attended: %0.8f" % (totalAttendedCustomers))
+print("End Of Simulation at: %0.8f\n" % (endOfSimulation))
+
+print("E[X^2] = %0.8f" % (variancia))
+print("E[X] = %0.8f" % (serviceTimeAverage))
+print("Mi = %0.8f" % (mi))
+print("Rho = %0.8f" % (rho))
+print("E[Xr] = %0.8f" % (expResidualTime))
+print("E[U] = %0.8f\n" % (expU))
+print("E[U] = %0.8f\n" % (avgTotalTimeCustomer))
