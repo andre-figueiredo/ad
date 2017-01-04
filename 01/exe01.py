@@ -4,6 +4,7 @@
 from SimPy.Simulation import Simulation, Process, Resource, Monitor, PriorityQ, hold, request, release
 from random import expovariate, seed
 from random import randrange
+import csv
 
 ###########################################################
 ## Experiment data
@@ -53,22 +54,22 @@ class Customer(Process):
 		customerName = self.name
 		# arrival time
 		arrive = self.sim.now()
-		Nwaiting = len(self.sim.counter.waitQ)
-		print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
+		queuelen = len(self.sim.counter.waitQ)
+		#print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
 		yield request,self,self.sim.counter,P
 		
 		# waiting time
 		wait = self.sim.now() - arrive
-		print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
+		#print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
 
 		yield hold,self,timeInBank
 		yield release,self,self.sim.counter
 		
 		finished = self.sim.now()
-		print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+		#print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
 
 		totalTime = finished - arrive
-		customersData.append([customerName,arrive,wait,timeInBank,totalTime,finished])
+		customersData.append([customerName,arrive,queuelen,wait,timeInBank,totalTime,finished])
 
 
 class BankModel(Simulation):
@@ -102,42 +103,7 @@ for i in range(numberOfSim):
     mg1.startCollection(when=maxTime, monitors=mg1.allMonitors)
     result = mg1.run(seedVal + i)
     bankreception.append(result)
-#print("customerName | Arrival Time | Time in queue | Time been served | Total time | end time")
-#print(customersData)
-#print("\n")
-#print("-" * 50)
-#print("Average wait | Average queue | Average of Utilization | End Of Simulation at")
-#for i in range(len(bankreception)):
-#    print(bankreception[i])
 
-############################################################
-## Results
-############################################################
-serviceTimeSum = 0.0
-totalTimeCustomer = 0.0
-totalAttendedCustomers = float(len(customersData))
-endOfSimulation = bankreception[0][3]
-for i in range(len(customersData)):
-    serviceTimeSum = serviceTimeSum + customersData[i][3]
-    totalTimeCustomer = totalTimeCustomer + customersData[i][2]
-
-serviceTimeAverage = serviceTimeSum / totalAttendedCustomers
-avgTotalTimeCustomer = totalTimeCustomer / totalAttendedCustomers
-
-mi = 1.0/serviceTimeAverage
-if mi > lamb1+lamb2:
-    rho = (lamb1+lamb2)/mi
-else:
-    rho = 1.0 
-expResidualTime = (serviceTimeAverage*serviceTimeAverage)/(2*serviceTimeAverage)
-expU = (rho*expResidualTime)/(1.0 - rho)
-############################################################
-## Prints
-############################################################
-print("\nTotal clients attended: %0.8f"%(totalAttendedCustomers))
-print("End Of Simulation at: %0.8f\n"%(endOfSimulation))
-print("Mi = %0.8f"%(mi))
-print("Rho = %0.8f"%(rho))
-print("E[Xr] = %0.8f"%(expResidualTime))
-print("E[U] = %0.8f\n"%(expU))
-print("E[U] = %0.8f\n"%(avgTotalTimeCustomer))
+with open("traces.csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerows(customersData)
