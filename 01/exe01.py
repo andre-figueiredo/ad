@@ -22,11 +22,11 @@ numberOfSim = 1
 
 ### Customer one ------------------------------------------
 lamb1 = 0.1		# rate of Customer one
-NCustomer1 = 50000	# Number of Customers type one
+NCustomer1 = 50000		# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 0.2		# rate of Customer two
-NCustomer2 = 50000	# Number of Customers type two
+lamb2 = 0.1		# rate of Customer two
+NCustomer2 = 50000		# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
@@ -115,6 +115,8 @@ totalServiceTime = 0.0
 totalTimeSystemInUse = 0.0
 totalTimeWaitCustomer = 0.0
 totalAttendedCustomers = float(len(customersData))
+customers1Data = []
+customers2Data = []
 
 # Para facilitar saber qual a posicao no array de cada coisa
 # [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
@@ -131,6 +133,11 @@ for i in range(len(customersData)):
     totalTimeWaitCustomer += customersData[i][wait]
     totalTimeSystemInUse += customersData[i][totalTime]
 
+    if customersData[i][name].startswith("Customer01"):
+        customers1Data.append(customersData[i])
+    else:
+        customers2Data.append(customersData[i])
+
 serviceTimeAverage = totalServiceTime / totalAttendedCustomers
 pendingService = totalTimeWaitCustomer / totalAttendedCustomers
 
@@ -145,6 +152,8 @@ mi = 1.0 / serviceTimeAverage
 
 # Rho eh o percentual de uso do sistema. Logo estou calculando atraves dos dados.
 rho = (lamb1+lamb2)/mi
+rho1 = lamb1/mi
+rho2 = lamb2/mi
 expResidualTime = variancia / (2 * serviceTimeAverage)
 expU = (rho * expResidualTime) / (1.0 - rho)
 
@@ -161,5 +170,5 @@ print("Rho = %0.8f" % (rho))
 print("E[Xr] = %0.8f" % (expResidualTime))
 print("E[U] calculado = %0.8f" % (expU))
 print("E[U] simulado = %0.8f" % (pendingService))
-
-#######
+print("Erro = %0.8f"%(pendingService-expU))
+####### Questao 2
