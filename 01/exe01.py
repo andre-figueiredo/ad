@@ -2,8 +2,8 @@
     no priority queue and FIFO. """
 
 from SimPy.Simulation import Simulation, Process, Resource, Monitor, PriorityQ, hold, request, release
-from random import expovariate, seed
-from random import randrange
+from random import expovariate, seed, randrange
+import numpy as np
 import csv
 
 ###########################################################
@@ -21,12 +21,12 @@ maxTime = 10000000.0
 numberOfSim = 1
 
 ### Customer one ------------------------------------------
-lamb1 = 0.5		# rate of Customer one
-NCustomer1 = 50000		# Number of Customers type one
+lamb1 = 0.01		# rate of Customer one
+NCustomer1 = 2		# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 0.3		# rate of Customer two
-NCustomer2 = 50000		# Number of Customers type two
+lamb2 = 0.02		# rate of Customer two
+NCustomer2 = 2	# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
@@ -43,7 +43,7 @@ class Source(Process):
         for i in range(number):
             c = Customer(name="Customer%02d_%02d" % (typeOfClient, i,), sim=self.sim)
             self.sim.activate(c, c.visit(timeInBank=serviceTime[randrange(0,len(serviceTime))], counter=self.sim.counter, P=priority))
-            t = expovariate(1.0 / interval)
+            t = expovariate(interval)
             yield hold, self, t
 
 
@@ -96,7 +96,6 @@ class BankModel(Simulation):
 ## Experiment
 ############################################################
 
-# ----------------------
 bankreception = []
 for i in range(numberOfSim):
     mg1 = BankModel()
@@ -107,3 +106,56 @@ for i in range(numberOfSim):
 with open("traces.csv", "w") as f:
     writer = csv.writer(f)
     writer.writerows(customersData)
+
+############################################################
+## Results
+############################################################
+
+totalServiceTime = 0.0
+totalTimeSystemInUse = 0.0
+totalTimeWaitCustomer = 0.0
+totalAttendedCustomers = float(len(customersData))
+
+# Para facilitar saber qual a posicao no array de cada coisa
+# [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
+name = 0
+arrive = 1
+queueLen = 2
+wait = 3
+timeInBank = 4
+totalTime = 5
+finished = 6
+
+for i in range(len(customersData)):
+    totalServiceTime += customersData[i][timeInBank]
+    totalTimeWaitCustomer += customersData[i][wait]
+    totalTimeSystemInUse += customersData[i][totalTime]
+
+serviceTimeAverage = totalServiceTime / totalAttendedCustomers
+pendingService = totalTimeWaitCustomer / totalAttendedCustomers
+
+# Calculando a variancia para poder usar como segundo momento vulgo E[X^2]
+# e assim conseguir calcular o x residual = E[X^2] / (2 * E[X])
+total = 0
+for i in range(len(customersData)):
+    total += ((customersData[i][timeInBank] - serviceTimeAverage) ** 2)
+
+variancia = total / (totalAttendedCustomers - 1)
+mi = 1.0 / serviceTimeAverage
+
+# Rho eh o percentual de uso do sistema. Logo estou calculando atraves dos dados.
+rho = (lamb1+lamb2)/mi
+expResidualTime = variancia / (2 * serviceTimeAverage)
+expU = (rho * expResidualTime) / (1.0 - rho)
+
+############################################################
+## Prints
+############################################################
+print("\nTotal de clientes atendidos: %0.8f" % (totalAttendedCustomers))
+print("E[X^2] = %0.8f" % (variancia))
+print("E[X] = %0.8f" % (serviceTimeAverage))
+print("Mi = %0.8f" % (mi))
+print("Rho = %0.8f" % (rho))
+print("E[Xr] = %0.8f" % (expResidualTime))
+print("E[U] calculado = %0.8f" % (expU))
+print("E[U] contado = %f" % (pendingService))
