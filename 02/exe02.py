@@ -20,11 +20,11 @@ numberOfSim = 1
 
 
 ### Customer one ------------------------------------------
-lamb1 = 0.5		# rate of Customer one
+lamb1 = 0.05		# rate of Customer one
 NCustomer1 = 50000	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 0.3		# rate of Customer two
+lamb2 = 0.03		# rate of Customer two
 NCustomer2 = 50000	# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
@@ -41,7 +41,7 @@ class Source(Process):
         for i in range(number):
             c = Customer(name = "Customer%02d_%02d"%(typeOfClient,i,), sim=self.sim)
             self.sim.activate(c,c.visit(timeInBank=serviceTime[randrange(0,len(serviceTime))], counter=self.sim.counter, P=self.sim.now()))
-            t = expovariate(1.0/interval)
+            t = expovariate(interval)
             yield hold,self,t
 
 class Customer(Process):
