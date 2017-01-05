@@ -21,12 +21,12 @@ maxTime = 10000000.0
 numberOfSim = 1
 
 ### Customer one ------------------------------------------
-lamb1 = 0.01		# rate of Customer one
-NCustomer1 = 2		# Number of Customers type one
+lamb1 = 0.1		# rate of Customer one
+NCustomer1 = 50000	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 0.02		# rate of Customer two
-NCustomer2 = 2	# Number of Customers type two
+lamb2 = 0.2		# rate of Customer two
+NCustomer2 = 50000	# Number of Customers type two
 priority2 = 0		# Priority number foR Customer two
 
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
@@ -151,11 +151,15 @@ expU = (rho * expResidualTime) / (1.0 - rho)
 ############################################################
 ## Prints
 ############################################################
-print("\nTotal de clientes atendidos: %0.8f" % (totalAttendedCustomers))
+
+####### Questao 1
+print("\n\n###### Questao 1 #######")
 print("E[X^2] = %0.8f" % (variancia))
 print("E[X] = %0.8f" % (serviceTimeAverage))
 print("Mi = %0.8f" % (mi))
 print("Rho = %0.8f" % (rho))
 print("E[Xr] = %0.8f" % (expResidualTime))
 print("E[U] calculado = %0.8f" % (expU))
-print("E[U] contado = %f" % (pendingService))
+print("E[U] simulado = %0.8f" % (pendingService))
+
+#######
