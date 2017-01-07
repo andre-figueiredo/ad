@@ -16,18 +16,18 @@ seedVal = 99998
 # Time spended to attend a Customer (M/G/1 - fixed time)
 serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
 # Maximum simulation time
-maxTime = 10000000.0
+maxTime = 1000000.0
 # How many time repeat simulation?
-numberOfSim = 1
+numberOfSim = 2
 
 ### Customer one ------------------------------------------
-lamb1 = 0.1		# rate of Customer one
-NCustomer1 = 50000		# Number of Customers type one
+lamb1 = 1.1 		# rate of Customer one
+NCustomer1 = 50000 	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 0.1		# rate of Customer two
+lamb2 = 1.2		# rate of Customer two
 NCustomer2 = 50000		# Number of Customers type two
-priority2 = 0		# Priority number foR Customer two
+priority2 = 0 		# Priority number foR Customer two
 
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
 customersData = []
@@ -48,29 +48,28 @@ class Source(Process):
 
 
 class Customer(Process):
-	""" Customer arrives, is served and leaves """
+    """ Customer arrives, is served and leaves """
         
-	def visit(self, timeInBank=0, counter=0, P=0):
-		customerName = self.name
-		# arrival time
-		arrive = self.sim.now()
-		queuelen = len(self.sim.counter.waitQ)
-		#print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
-		yield request,self,self.sim.counter,P
+    def visit(self, timeInBank=0, counter=0, P=0):
+        customerName = self.name
+        # arrival time
+        arrive = self.sim.now()
+        queuelen = len(self.sim.counter.waitQ)
+        #print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,queuelen))
+        yield request,self,self.sim.counter,P
 		
-		# waiting time
-		wait = self.sim.now() - arrive
-		#print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
+        # waiting time
+        wait = self.sim.now() - arrive
+        #print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
 
-		yield hold,self,timeInBank
-		yield release,self,self.sim.counter
-		
-		finished = self.sim.now()
-		#print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+        yield hold,self,timeInBank
+        yield release,self,self.sim.counter
 
-		totalTime = finished - arrive
-		customersData.append([customerName,arrive,queuelen,wait,timeInBank,totalTime,finished])
+        finished = self.sim.now()
+        #print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
 
+        totalTime = finished - arrive
+        customersData.append([customerName,arrive,queuelen,wait,timeInBank,totalTime,finished])
 
 class BankModel(Simulation):
     def run(self, aseed):
@@ -80,16 +79,16 @@ class BankModel(Simulation):
                                 qType=PriorityQ, sim=self, capacity=1)
         s1 = Source('Source1', sim=self)
         s2 = Source('Source2', sim=self)
-        self.activate(s1, s1.generate(number=NCustomer1, interval=lamb1, typeOfClient=1, priority=priority1))
-        self.activate(s2, s2.generate(number=NCustomer2, interval=lamb2, typeOfClient=2, priority=priority2))
+        self.activate(s1, s1.generate(number=NCustomer1, interval=1.0/lamb1, typeOfClient=1, priority=priority1))
+        self.activate(s2, s2.generate(number=NCustomer2, interval=1.0/lamb2, typeOfClient=2, priority=priority2))
         self.simulate(until=maxTime)
 
-        avgwait = self.counter.waitMon.mean()
-        avgqueue = self.counter.waitMon.timeAverage()
-        avgutilization = self.counter.actMon.timeAverage()
-        endOfSim = self.now()
+        #avgwait = self.counter.waitMon.mean()
+        #avgqueue = self.counter.waitMon.timeAverage()
+        #avgutilization = self.counter.actMon.timeAverage()
+        #endOfSim = self.now()
 
-        return [avgwait, avgqueue, avgutilization, endOfSim]
+        return#[avgwait, avgqueue, avgutilization, endOfSim]
 
 
 ############################################################
@@ -103,72 +102,66 @@ for i in range(numberOfSim):
     result = mg1.run(seedVal + i)
     bankreception.append(result)
 
-with open("traces.csv", "w") as f:
-    writer = csv.writer(f)
-    writer.writerows(customersData)
+    ############################################################
+	## Results
+	############################################################
+    totalServiceTime = 0.0
+    totalTimeWaitCustomer = 0.0
+    totalAttendedCustomers = float(len(customersData))
+    customers1Data = []
+    customers2Data = []
 
-############################################################
-## Results
-############################################################
+	# [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
+    name = 0
+    arrive = 1
+    queueLen = 2
+    wait = 3
+    timeInBank = 4
+    totalTime = 5
+    finished = 6
 
-totalServiceTime = 0.0
-totalTimeSystemInUse = 0.0
-totalTimeWaitCustomer = 0.0
-totalAttendedCustomers = float(len(customersData))
-customers1Data = []
-customers2Data = []
+    for i in range(len(customersData)):
+        totalServiceTime += customersData[i][timeInBank]
+        totalTimeWaitCustomer += customersData[i][wait]
 
-# Para facilitar saber qual a posicao no array de cada coisa
-# [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
-name = 0
-arrive = 1
-queueLen = 2
-wait = 3
-timeInBank = 4
-totalTime = 5
-finished = 6
-
-for i in range(len(customersData)):
-    totalServiceTime += customersData[i][timeInBank]
-    totalTimeWaitCustomer += customersData[i][wait]
-    totalTimeSystemInUse += customersData[i][totalTime]
-
-    if customersData[i][name].startswith("Customer01"):
+        """if customersData[i][name].startswith("Customer01"):
         customers1Data.append(customersData[i])
-    else:
-        customers2Data.append(customersData[i])
+        else:
+        customers2Data.append(customersData[i])"""
 
-serviceTimeAverage = totalServiceTime / totalAttendedCustomers
-pendingService = totalTimeWaitCustomer / totalAttendedCustomers
+    serviceTimeAverage = totalServiceTime / totalAttendedCustomers
+    # pendingService hold the E[U] calculated by simulation
+    pendingService = totalTimeWaitCustomer/ totalAttendedCustomers
 
-# Calculando a variancia para poder usar como segundo momento vulgo E[X^2]
-# e assim conseguir calcular o x residual = E[X^2] / (2 * E[X])
-total = 0
-for i in range(len(customersData)):
-    total += ((customersData[i][timeInBank] - serviceTimeAverage) ** 2)
+    total = 0.0
+    for i in range(len(customersData)):
+        total += ((customersData[i][timeInBank] - serviceTimeAverage) ** 2)
 
-variancia = total / (totalAttendedCustomers - 1)
-mi = 1.0 / serviceTimeAverage
+    variance = total / float(len(customersData))
+    expResidualTime = (variance + serviceTimeAverage ** 2) / (2 * serviceTimeAverage)
+    mi = 1.0 / serviceTimeAverage
+    rho = (lamb1 + lamb2)/mi
+    #rho1 = lamb1/mi
+    #rho2 = lamb2/mi
+    expUCalc = rho * expResidualTime / (1.0 - rho)
 
-# Rho eh o percentual de uso do sistema. Logo estou calculando atraves dos dados.
-rho = (lamb1+lamb2)/mi
-rho1 = lamb1/mi
-rho2 = lamb2/mi
-expResidualTime = variancia / (2 * serviceTimeAverage)
-expU = (rho * expResidualTime) / (1.0 - rho)
+    ############################################################
+    ## Prints
+    ############################################################
 
-############################################################
-## Prints
-############################################################
+    ####### Questao 1
+    print("\n\n###### Questao 1 #######")
+    print("Lambda1 = %0.8f; Lambda2 = %0.8f; Lambda = %0.8f" %(lamb1,lamb2,lamb1+lamb2))
+    print("Mi = %0.8f" %(mi))
+    print("E[X] = %0.8f" %(serviceTimeAverage))
+    print("Var(X) = %0.8f "%(variance))
+    print("Mi = %0.8f" % (mi))
+    print("Rho = %0.8f" % (rho))
+    print("(sim) E[U] = %0.8f"%(pendingService))
+    print("(calc) E[U] = %0.8f"%(expUCalc))
+    ####### Questao 2
 
-####### Questao 1
-print("\n\n###### Questao 1 #######")
-print("E[X^2] = %0.8f" % (variancia))
-print("E[X] = %0.8f" % (serviceTimeAverage))
-print("Mi = %0.8f" % (mi))
-print("Rho = %0.8f" % (rho))
-print("E[Xr] = %0.8f" % (expResidualTime))
-print("E[U] calculado = %0.8f" % (expU))
-print("E[U] simulado = %0.8f" % (pendingService))
-print("Erro = %0.8f"%(pendingService-expU))
-####### Questao 2
+"""with open("traces.csv", "w") as f:
+    writer = csv.writer(f)
+    writer.writerows(customersData)"""
+
