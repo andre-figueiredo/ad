@@ -14,23 +14,22 @@ import csv
 # Seed to start simulation
 seedVal = 99998
 # Time spended to attend a Customer (M/G/1 - fixed time)
-serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
+serviceTime = [0.01]
 # Maximum simulation time
-maxTime = 1000000.0
+maxTime = float("inf")
 # How many time repeat simulation?
-numberOfSim = 2
-
-### Customer one ------------------------------------------
-lamb1 = 1.1 		# rate of Customer one
-NCustomer1 = 50000 	# Number of Customers type one
-priority1 = 0		# Priority number for Customer one
-### Customer two ------------------------------------------
-lamb2 = 1.2		# rate of Customer two
-NCustomer2 = 50000		# Number of Customers type two
-priority2 = 0 		# Priority number foR Customer two
-
+numberOfSim = 1
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
 customersData = []
+
+### Customer one ------------------------------------------
+lamb1 = 50.0		# rate of Customer one
+NCustomer1 = 500000 	# Number of Customers type one
+priority1 = 0		# Priority number for Customer one
+### Customer two ------------------------------------------
+lamb2 = 45.0		# rate of Customer two
+NCustomer2 = 500000		# Number of Customers type two
+priority2 = 0 		# Priority number foR Customer two
 
 ###########################################################
 ## Model components
@@ -83,18 +82,17 @@ class BankModel(Simulation):
         self.activate(s2, s2.generate(number=NCustomer2, interval=1.0/lamb2, typeOfClient=2, priority=priority2))
         self.simulate(until=maxTime)
 
-        #avgwait = self.counter.waitMon.mean()
-        #avgqueue = self.counter.waitMon.timeAverage()
-        #avgutilization = self.counter.actMon.timeAverage()
-        #endOfSim = self.now()
+        avgwait = self.counter.waitMon.mean()
+        avgqueue = self.counter.waitMon.timeAverage()
+        avgutilization = self.counter.actMon.timeAverage()
+        endOfSim = self.now()
 
-        return#[avgwait, avgqueue, avgutilization, endOfSim]
+        return [avgwait, avgqueue, avgutilization, endOfSim]
 
 
 ############################################################
 ## Experiment
 ############################################################
-
 bankreception = []
 for i in range(numberOfSim):
     mg1 = BankModel()
@@ -103,15 +101,12 @@ for i in range(numberOfSim):
     bankreception.append(result)
 
     ############################################################
-	## Results
-	############################################################
-    totalServiceTime = 0.0
-    totalTimeWaitCustomer = 0.0
-    totalAttendedCustomers = float(len(customersData))
-    customers1Data = []
-    customers2Data = []
+    ## Results
+    ############################################################
+    #customers1Data = []
+    #customers2Data = []
 
-	# [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
+    # [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
     name = 0
     arrive = 1
     queueLen = 2
@@ -119,31 +114,30 @@ for i in range(numberOfSim):
     timeInBank = 4
     totalTime = 5
     finished = 6
-
-    for i in range(len(customersData)):
-        totalServiceTime += customersData[i][timeInBank]
-        totalTimeWaitCustomer += customersData[i][wait]
-
-        """if customersData[i][name].startswith("Customer01"):
-        customers1Data.append(customersData[i])
+    # Separating Customers1 and Customers2
+    """for i in range(len(customersData)):
+        if customersData[i][name].startswith("Customer01"):
+            customers1Data.append(customersData[i])
         else:
-        customers2Data.append(customersData[i])"""
-
-    serviceTimeAverage = totalServiceTime / totalAttendedCustomers
-    # pendingService hold the E[U] calculated by simulation
-    pendingService = totalTimeWaitCustomer/ totalAttendedCustomers
-
-    total = 0.0
+            customers2Data.append(customersData[i])"""
+    # Removing names to calculate Variances e Means
     for i in range(len(customersData)):
-        total += ((customersData[i][timeInBank] - serviceTimeAverage) ** 2)
-
-    variance = total / float(len(customersData))
-    expResidualTime = (variance + serviceTimeAverage ** 2) / (2 * serviceTimeAverage)
-    mi = 1.0 / serviceTimeAverage
-    rho = (lamb1 + lamb2)/mi
+        customersData[i].pop(name)
+   
+    sumAllValues = np.sum(customersData, axis=0)
+    avgs = np.mean(customersData, axis=0)
+    variances = np.var(customersData, axis=0)
+    endOfSim = bankreception[0][3]
+    # E[X_r] = E[X^2] / 2*E[X] with E[X^2] = Var(X) + (E[X])^2
+    expResidualTime = (variances[timeInBank-1] + (avgs[timeInBank-1] ** 2)) / (2.0 * avgs[timeInBank-1])
+    # pendingService hold the E[U] calculated by simulation
+    pendingService = avgs[wait-1]
+    mi = 1.0 / avgs[timeInBank-1]
+    #rho = (lamb1 + lamb2)/mi
+    rho = sumAllValues[timeInBank-1]/endOfSim
     #rho1 = lamb1/mi
     #rho2 = lamb2/mi
-    expUCalc = rho * expResidualTime / (1.0 - rho)
+    pendingServiceCalc = rho * expResidualTime / (1.0 - rho)
 
     ############################################################
     ## Prints
@@ -151,15 +145,18 @@ for i in range(numberOfSim):
 
     ####### Questao 1
     print("\n\n###### Questao 1 #######")
+    print("X: va que mede o tempo de atendimento.")
     print("Lambda1 = %0.8f; Lambda2 = %0.8f; Lambda = %0.8f" %(lamb1,lamb2,lamb1+lamb2))
     print("Mi = %0.8f" %(mi))
-    print("E[X] = %0.8f" %(serviceTimeAverage))
-    print("Var(X) = %0.8f "%(variance))
-    print("Mi = %0.8f" % (mi))
-    print("Rho = %0.8f" % (rho))
+    print("E[X] = %0.8f" %(avgs[timeInBank-1]))
+    print("Var(X) = %0.8f "%(variances[timeInBank-1]))
+    print("E[X_r] = %0.8f "%(expResidualTime))
+    #print("Rho1 = %0.8f" % (rho1))
+    #print("Rho2 = %0.8f" % (rho2))
+    #print("(calc) Rho = %0.8f" % (rho))
+    print("Rho = %0.8f"%(rho))
     print("(sim) E[U] = %0.8f"%(pendingService))
-    print("(calc) E[U] = %0.8f"%(expUCalc))
-    ####### Questao 2
+    print("(calc) E[U] = %0.8f"%(pendingServiceCalc))
 
 """with open("traces.csv", "w") as f:
     writer = csv.writer(f)
