@@ -153,9 +153,7 @@ for i in range(numberOfSim):
     ############################################################
     ## Prints
     ############################################################
-
-    ####### Questao 1
-    print("\n\n###### Questao 1 #######")
+    print("###### Informacoes gerais #########")
     print("X => v.a que mede o tempo de atendimento de um cliente")
     print("Simulacao finalizada no minuto: %0.8f" %(endOfSim))
     print("Numero total de clientes atendidos: %d"%(len(customersData)))
@@ -167,6 +165,9 @@ for i in range(numberOfSim):
     print("(sim) Rho1 = %0.8f" % (rho1))
     print("(sim) Rho2 = %0.8f" % (rho2))
     print("(sim) Rho = %0.8f"%(rho))
+
+    ####### Questao 1
+    print("\n\n###### Questao 1 #######")
     print("(sim) E[U] = %0.8f"%(pendingService))
     print("(calc) E[U] = %0.8f"%(pendingServiceCalc))
     ######## Questao 2
