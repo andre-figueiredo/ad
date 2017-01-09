@@ -14,7 +14,7 @@ import csv
 # Seed to start simulation
 seedVal = 99998
 # Time spended to attend a Customer (M/G/1 - fixed time)
-serviceTime = [0.01]
+serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
 # Maximum simulation time
 maxTime = float("inf")
 # How many time repeat simulation?
@@ -23,11 +23,11 @@ numberOfSim = 1
 customersData = []
 
 ### Customer one ------------------------------------------
-lamb1 = 50.0		# rate of Customer one
+lamb1 = 1.0		# rate of Customer one
 NCustomer1 = 500000 	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
-lamb2 = 45.0		# rate of Customer two
+lamb2 = 1.0		# rate of Customer two
 NCustomer2 = 500000		# Number of Customers type two
 priority2 = 0 		# Priority number foR Customer two
 
@@ -103,8 +103,8 @@ for i in range(numberOfSim):
     ############################################################
     ## Results
     ############################################################
-    #customers1Data = []
-    #customers2Data = []
+    customers1Data = []
+    customers2Data = []
 
     # [[customer name, arrival time, queue length ,time in queue, time been served, total time, end time]]
     name = 0
@@ -115,28 +115,39 @@ for i in range(numberOfSim):
     totalTime = 5
     finished = 6
     # Separating Customers1 and Customers2
-    """for i in range(len(customersData)):
+    for i in range(len(customersData)):
         if customersData[i][name].startswith("Customer01"):
             customers1Data.append(customersData[i])
         else:
-            customers2Data.append(customersData[i])"""
+            customers2Data.append(customersData[i])
+
     # Removing names to calculate Variances e Means
     for i in range(len(customersData)):
         customersData[i].pop(name)
    
-    sumAllValues = np.sum(customersData, axis=0)
+    for i in range(len(customers1Data)):
+        customers1Data[i].pop(name)
+
+    for i in range(len(customers2Data)):
+        customers2Data[i].pop(name)
+
     avgs = np.mean(customersData, axis=0)
     variances = np.var(customersData, axis=0)
+    #print(avgs)
+    #print(variances)
+    sumAllValues = np.sum(customersData, axis=0)
+    sumAllValuesCustomer1 = np.sum(customers1Data, axis=0)
+    sumAllValuesCustomer2 = np.sum(customers2Data, axis=0)
+    # End of Simulation in minutes
     endOfSim = bankreception[0][3]
-    # E[X_r] = E[X^2] / 2*E[X] with E[X^2] = Var(X) + (E[X])^2
-    expResidualTime = (variances[timeInBank-1] + (avgs[timeInBank-1] ** 2)) / (2.0 * avgs[timeInBank-1])
+    # E[X_r] = E[X^2] / 2*E[X]. With E[X^2] = Var(X) + (E[X])^2
+    expResidualTime = (variances[timeInBank-2] + (avgs[timeInBank-2] ** 2)) / (2.0 * avgs[timeInBank-2])
     # pendingService hold the E[U] calculated by simulation
-    pendingService = avgs[wait-1]
-    mi = 1.0 / avgs[timeInBank-1]
-    #rho = (lamb1 + lamb2)/mi
-    rho = sumAllValues[timeInBank-1]/endOfSim
-    #rho1 = lamb1/mi
-    #rho2 = lamb2/mi
+    pendingService = avgs[wait-2]
+    mi = 1.0 / avgs[timeInBank-2]
+    rho = sumAllValues[timeInBank-2] / endOfSim
+    rho1 = sumAllValuesCustomer1[timeInBank-2] / endOfSim
+    rho2 = sumAllValuesCustomer2[timeInBank-2] / endOfSim
     pendingServiceCalc = rho * expResidualTime / (1.0 - rho)
 
     ############################################################
@@ -145,18 +156,21 @@ for i in range(numberOfSim):
 
     ####### Questao 1
     print("\n\n###### Questao 1 #######")
-    print("X: va que mede o tempo de atendimento.")
+    print("X => v.a que mede o tempo de atendimento de um cliente")
+    print("Simulacao finalizada no minuto: %0.8f" %(endOfSim))
+    print("Numero total de clientes atendidos: %d"%(len(customersData)))
     print("Lambda1 = %0.8f; Lambda2 = %0.8f; Lambda = %0.8f" %(lamb1,lamb2,lamb1+lamb2))
     print("Mi = %0.8f" %(mi))
-    print("E[X] = %0.8f" %(avgs[timeInBank-1]))
-    print("Var(X) = %0.8f "%(variances[timeInBank-1]))
+    print("E[X] = %0.8f" %(avgs[timeInBank-2]))
+    print("Var(X) = %0.8f "%(variances[timeInBank-2]))
     print("E[X_r] = %0.8f "%(expResidualTime))
-    #print("Rho1 = %0.8f" % (rho1))
-    #print("Rho2 = %0.8f" % (rho2))
-    #print("(calc) Rho = %0.8f" % (rho))
-    print("Rho = %0.8f"%(rho))
+    print("(sim) Rho1 = %0.8f" % (rho1))
+    print("(sim) Rho2 = %0.8f" % (rho2))
+    print("(sim) Rho = %0.8f"%(rho))
     print("(sim) E[U] = %0.8f"%(pendingService))
     print("(calc) E[U] = %0.8f"%(pendingServiceCalc))
+    ######## Questao 2
+    print("\n\n###### Questao 2 #######")
 
 """with open("traces.csv", "w") as f:
     writer = csv.writer(f)
