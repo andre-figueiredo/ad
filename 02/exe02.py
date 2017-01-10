@@ -190,6 +190,6 @@ for i in range(numberOfSim):
     customers2Data = []
     ilambda += 0.1
 
-with open("traces1.1.csv", "w") as f:
+with open("traces2.1.csv", "w") as f:
     writer = csv.writer(f)
     writer.writerows(finalPlot)
