@@ -75,8 +75,8 @@ class BankModel(Simulation):
         self.counter = Resource(name="Counter", unitName="John Doe", monitored=True, qType=PriorityQ, sim=self)
         s1 = Source('Source1', sim=self)
         s2 = Source('Source2', sim=self)
-        self.activate(s1, s1.generate(number=NCustomer1, interval=lamb1, typeOfClient=1 ,priority=priority1))
-        self.activate(s2, s2.generate(number=NCustomer2, interval=lamb2, typeOfClient=2, priority=priority2))
+        self.activate(s1, s1.generate(number=NCustomer1, interval=1.0/lamb1, typeOfClient=1, priority=priority1))
+        self.activate(s2, s2.generate(number=NCustomer2, interval=1.0/lamb2, typeOfClient=2, priority=priority2))
         self.simulate(until=maxTime)
 
         avgwait = self.counter.waitMon.mean()
