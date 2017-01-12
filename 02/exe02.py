@@ -18,7 +18,7 @@ serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
 # Maximum simulation time
 maxTime = float("inf")
 # How many time repeat simulation?
-numberOfSim = 1
+numberOfSim = 10
 # [[customerName, arrival time, queue length ,time in queue, time been served, total time, end time]]
 customersData = []
 customers1Data = []
@@ -98,7 +98,7 @@ class BankModel(Simulation):
 bankreception = []
 
 # To iterate lambda value
-ilambda = 2.6
+ilambda = 2.0
 
 # Array to hold information about variation of E[U]
 finalPlot = []

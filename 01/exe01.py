@@ -40,6 +40,8 @@ priority2 = 0 		# Priority number foR Customer two
 class Source(Process):
     """ Source generates customers randomly """
 
+    residual_time = []
+
     def generate(self, number, interval, typeOfClient, priority):
         for i in range(number):
             c = Customer(name="Customer%02d_%02d" % (typeOfClient, i,), sim=self.sim)

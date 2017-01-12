@@ -12,7 +12,7 @@ import csv
 
 ### General values ----------------------------------------
 # Seed to start simulation
-seedVal = 123456
+seedVal = 12345
 # Time spended to attend a Customer (M/G/1 - fixed time)
 serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
 # Maximum simulation time
@@ -41,10 +41,10 @@ class Source(Process):
 
     def generate(self, number, interval, typeOfClient, priority):       
         for i in range(number):
-            c = Customer(name = "Customer%02d_%02d"%(typeOfClient,i,), sim=self.sim)
-            self.sim.activate(c,c.visit(timeInBank=serviceTime[randrange(0,len(serviceTime))], counter=self.sim.counter, P=priority))
+            c = Customer(name = "Customer%02d_%02d"%(typeOfClient, i,), sim=self.sim)
+            self.sim.activate(c, c.visit(timeInBank=serviceTime[randrange(0, len(serviceTime))], counter=self.sim.counter, P=priority))
             t = expovariate(interval)
-            yield hold,self,t
+            yield hold, self, t
 
 class Customer(Process):
     """ Customer arrives, is served and leaves """
@@ -54,17 +54,17 @@ class Customer(Process):
         # arrival time
         arrive = self.sim.now()
         queuelen = len(self.sim.counter.waitQ)
-        #print ("%8.3f %s: Queue is %d on arrival"%(self.sim.now(),self.name,Nwaiting))
-        yield request,self,self.sim.counter,P
+        #print ("%8.3f %s: Queue is %d on arrival" % (self.sim.now(), self.name, queuelen))
+        yield request, self, self.sim.counter, P
 
         # waiting time
         wait = self.sim.now() - arrive
-        #print ("%8.3f %s: Waited %6.3f"%(self.sim.now(),self.name,wait))
-        yield hold,self,timeInBank
-        yield release,self,self.sim.counter                             
+        #print ("%8.3f %s: Waited %6.3f" % (self.sim.now(),self.name,wait))
+        yield hold, self,timeInBank
+        yield release, self, self.sim.counter
 
         finished = self.sim.now()
-        #print ("%8.3f %s: Completed"%(self.sim.now(),self.name))
+        #print ("%8.3f %s: Completed" % (self.sim.now(), self.name))
 
         totalTime = finished - arrive
         customersData.append([customerName,arrive,queuelen,wait,timeInBank,totalTime,finished])
@@ -95,7 +95,7 @@ class BankModel(Simulation):
 bankreception = []
 
 # To iterate lambda value
-ilambda = 0.20
+ilambda = 0.1
 
 # Array to hold information about variation of E[U]
 finalPlot = []
@@ -185,7 +185,7 @@ for i in range(numberOfSim):
     customersData = []
     customers1Data = []
     customers2Data = []
-    ilambda += 0.001
+    ilambda -= 0.01
 
 with open("traces5.1.csv", "w") as f:
     writer = csv.writer(f)
