@@ -18,7 +18,7 @@ serviceTime = [0.1, 0.2, 0.3, 0.4, 0.5]
 # Maximum simulation time
 maxTime = float("inf")
 # How many time repeat simulation?
-numberOfSim = 100
+numberOfSim = 10
 # [[customerName, arrival time, time in queue, time been served, total time, end time]]
 customersData = []
 customers1Data = []
@@ -26,11 +26,11 @@ customers2Data = []
 
 ### Customer one ------------------------------------------
 #lamb1 = 1.0		# rate of Customer one
-NCustomer1 = 10000 	# Number of Customers type one
+NCustomer1 = 100000 	# Number of Customers type one
 priority1 = 0		# Priority number for Customer one
 ### Customer two ------------------------------------------
 #lamb2 = 1.0		# rate of Customer two
-NCustomer2 = 10000	# Number of Customers type two
+NCustomer2 = 100000	# Number of Customers type two
 priority2 = 0 		# Priority number foR Customer two
 
 ###########################################################
@@ -143,6 +143,10 @@ for i in range(numberOfSim):
     # Usefull informations
     avgs = np.mean(customersDataNoNames, axis=0)
     variances = np.var(customersDataNoNames, axis=0)
+    avgsCustomers1 = np.mean(customers1DataNoNames, axis=0)
+    variancesCustomers1 = np.var(customers1DataNoNames, axis=0)
+    avgsCustomers2 = np.mean(customers2DataNoNames, axis=0)
+    variancesCustomers2 = np.var(customers2DataNoNames, axis=0)
     sumAllValues = np.sum(customersDataNoNames, axis=0)
     sumAllValuesCustomer1 = np.sum(customers1DataNoNames, axis=0)
     sumAllValuesCustomer2 = np.sum(customers2DataNoNames, axis=0)
@@ -152,6 +156,10 @@ for i in range(numberOfSim):
 
     # E[X_r] = E[X^2] / 2*E[X]. With E[X^2] = Var(X) + (E[X])^2
     expResidualTime = (variances[timeInBank] + (avgs[timeInBank] ** 2)) / (2.0 * avgs[timeInBank])
+    # E[X_r1] = E[X1^2] / 2*E[X1]. With E[X1^2] = Var(X1) + (E[X1])^2
+    expResidualTimeCustomer1 = (variancesCustomers1[timeInBank] + (avgsCustomers1[timeInBank] ** 2)) / (2.0 * avgsCustomers1[timeInBank])
+    # E[X_r2] = E[X2^2] / 2*E[X2]. With E[X2^2] = Var(X2) + (E[X2])^2
+    expResidualTimeCustomer2 = (variancesCustomers2[timeInBank] + (avgsCustomers2[timeInBank] ** 2)) / (2.0 * avgsCustomers2[timeInBank])
 
     # pendingService hold the E[U] calculated by simulation
     pendingService = avgs[wait]
@@ -162,14 +170,17 @@ for i in range(numberOfSim):
     rho1 = sumAllValuesCustomer1[timeInBank] / endOfSim
     rho2 = sumAllValuesCustomer2[timeInBank] / endOfSim
     pendingServiceCalc = rho * expResidualTime / (1.0 - rho)
+    pendingServiceCalcQ2 = (expResidualTimeCustomer1 * rho1) +\
+                           (expResidualTimeCustomer2 * rho2) +\
+                           ((rho ** 2 * expResidualTime) / (1.0 - rho))
 
-    finalPlot.append([lamb1, lamb2, lamb1+lamb2, pendingService, pendingServiceCalc])
+    finalPlot.append([lamb1, lamb2, lamb1+lamb2, pendingService, pendingServiceCalcQ2])
 
     ############################################################
     ## Prints
     ############################################################
     ####### Questao 1
-    print("###### Questao 1 #######\n")
+    """print("###### Questao 1 #######\n")
     print("###### Informacoes gerais #########")
     print("X => v.a que mede o tempo de atendimento de um cliente")
     print("Simulacao finalizada no minuto: %0.8f" % (endOfSim))
@@ -185,14 +196,24 @@ for i in range(numberOfSim):
     print("\n##### Resposta #######")
     print("(sim) E[U] = %0.8f"%(pendingService))
     print("(calc) E[U] = %0.8f"%(pendingServiceCalc))
+    print("\n\n")"""
+    ####### Questao 2
+    print("###### Questao 2 #######\n")
+    print("(sim) Rho1 = %0.8f" % (rho1))
+    print("(sim) Rho2 = %0.8f" % (rho2))
+    print("(sim) Rho = %0.8f" % (rho))
+    print("E[X_r1] = %0.8f " % (expResidualTimeCustomer1))
+    print("E[X_r2] = %0.8f " % (expResidualTimeCustomer2))
+    print("E[X_r] = %0.8f " % (expResidualTime))
+    print("(sim) E[U] = %0.8f" % (pendingService))
+    print("(calc) E[U] = %0.8f" % (pendingServiceCalcQ2))
     print("\n\n")
-
     # Clear customersData to the next iteration
     customersData = []
     customers1Data = []
     customers2Data = []
     ilambda += 0.1
 
-with open("traces1.1.csv", "w") as f:
+with open("traces1.2.csv", "w") as f:
     writer = csv.writer(f)
     writer.writerows(finalPlot)
